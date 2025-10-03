@@ -1,16 +1,24 @@
-x = 10;
-y = 5;
+# Присваивание и простые операции
+x is 10
+y is 5
 
-if (x > y) {
-    print x;
-} else {
-    print y;
-}
+# Условные операторы
+if x greater than y then
+    show x
+else
+    show y
+end
 
-while (x > 0) {
-    x = x - 1;
-    print x;
-}
+# Циклы
+loop while x greater than 0 do
+    x is x - 1
+    show x
+end
 
-a = 2 + 3 * 4;
-print a;
+# Арифметические операции
+a is 2 + 3 * 4
+show a
+
+# Строки
+message is "Привет, мир!"
+show message

@@ -8,6 +8,11 @@ class Num(AST):
         self.token = token
         self.value = token.value
 
+class String(AST):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
 class BinOp(AST):
     def __init__(self, left, op, right):
         self.left = left
@@ -75,63 +80,59 @@ class Parser:
     def statement(self):
         if self.current_token.type == 'ID':
             node = self.assignment_statement()
-        elif self.current_token.type == 'KEYWORD' and self.current_token.value == 'if':
+        elif self.current_token.type == 'KEYWORD_IF':
             node = self.if_statement()
-        elif self.current_token.type == 'KEYWORD' and self.current_token.value == 'while':
+        elif self.current_token.type == 'KEYWORD_LOOP':
             node = self.while_statement()
-        elif self.current_token.type == 'KEYWORD' and self.current_token.value == 'print':
+        elif self.current_token.type == 'KEYWORD_SHOW':
             node = self.print_statement()
-        elif self.current_token.type == 'LBRACE':
-            node = self.block_statement()
         else:
             node = self.empty_statement()
-        
-        if self.current_token.type == 'SEMI':
-            self.eat('SEMI')
         return node
 
     def assignment_statement(self):
         left = self.variable()
         token = self.current_token
-        self.eat('ASSIGN')
+        self.eat('ASSIGN_OR_EQ') # 'is'
         right = self.expr()
         node = Assign(left, token, right)
         return node
 
     def if_statement(self):
-        self.eat('KEYWORD') # if
-        self.eat('LPAREN')
+        self.eat('KEYWORD_IF') # if
         condition = self.expr()
-        self.eat('RPAREN')
+        self.eat('KEYWORD_THEN') # then
         if_block = self.block_statement()
         else_block = None
-        if self.current_token.type == 'KEYWORD' and self.current_token.value == 'else':
-            self.eat('KEYWORD') # else
+        if self.current_token.type == 'KEYWORD_ELSE':
+            self.eat('KEYWORD_ELSE') # else
             else_block = self.block_statement()
+        self.eat('KEYWORD_END') # end
         node = If(condition, if_block, else_block)
         return node
 
     def while_statement(self):
-        self.eat('KEYWORD') # while
-        self.eat('LPAREN')
+        self.eat('KEYWORD_LOOP') # loop
+        self.eat('KEYWORD_WHILE') # while
         condition = self.expr()
-        self.eat('RPAREN')
+        self.eat('KEYWORD_DO') # do
         body = self.block_statement()
+        self.eat('KEYWORD_END') # end
         node = While(condition, body)
         return node
 
     def print_statement(self):
-        self.eat('KEYWORD') # print
+        self.eat('KEYWORD_SHOW') # show
         expr = self.expr()
         node = Print(expr)
         return node
 
     def block_statement(self):
-        self.eat('LBRACE')
         statements = []
-        while self.current_token.type != 'RBRACE':
+        while self.current_token.type != 'KEYWORD_ELSE' and \
+              self.current_token.type != 'KEYWORD_END' and \
+              self.current_token.type != 'EOF':
             statements.append(self.statement())
-        self.eat('RBRACE')
         node = Block(statements)
         return node
 
@@ -141,18 +142,20 @@ class Parser:
     def expr(self):
         node = self.term()
 
-        while self.current_token.type in ('PLUS', 'MINUS', 'EQ', 'LT', 'GT'):
+        while self.current_token.type in ('PLUS', 'MINUS', 'ASSIGN_OR_EQ', 'KEYWORD_LESS', 'KEYWORD_GREATER'):
             token = self.current_token
             if token.type == 'PLUS':
                 self.eat('PLUS')
             elif token.type == 'MINUS':
                 self.eat('MINUS')
-            elif token.type == 'EQ':
-                self.eat('EQ')
-            elif token.type == 'LT':
-                self.eat('LT')
-            elif token.type == 'GT':
-                self.eat('GT')
+            elif token.type == 'ASSIGN_OR_EQ': # 'is' для сравнения
+                self.eat('ASSIGN_OR_EQ')
+            elif token.type == 'KEYWORD_LESS': # 'less than'
+                self.eat('KEYWORD_LESS')
+                self.eat('KEYWORD_THAN')
+            elif token.type == 'KEYWORD_GREATER': # 'greater than'
+                self.eat('KEYWORD_GREATER')
+                self.eat('KEYWORD_THAN')
             node = BinOp(left=node, op=token, right=self.term())
         return node
 
@@ -181,6 +184,9 @@ class Parser:
         elif token.type == 'INTEGER':
             self.eat('INTEGER')
             return Num(token)
+        elif token.type == 'STRING':
+            self.eat('STRING')
+            return String(token)
         elif token.type == 'LPAREN':
             self.eat('LPAREN')
             node = self.expr()
@@ -203,20 +209,20 @@ class Parser:
 
 if __name__ == '__main__':
     text = """
-    x = 10 + 5;
-    if (x > 10) {
-        print x;
-    } else {
-        print 0;
-    }
-    while (x > 0) {
-        x = x - 1;
-        print x;
-    }
+    x is 10 + 5
+    if x greater than 10 then
+        show x
+    else
+        show "x is not greater than 10"
+    end
+    loop while x greater than 0 do
+        x is x - 1
+        show x
+    end
+    y is "Hello, World!"
+    show y
     """
     lexer = Lexer(text)
     parser = Parser(lexer)
     ast = parser.parse()
-    # Для демонстрации можно вывести структуру AST, но это требует рекурсивного обхода
-    # Пока просто убедимся, что парсинг не вызывает ошибок
     print("Парсинг успешно завершен.")

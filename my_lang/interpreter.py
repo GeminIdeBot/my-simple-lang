@@ -1,4 +1,4 @@
-from my_lang.parser import Parser, BinOp, Num, UnaryOp, Var, Assign, Block, If, While, Print, NoOp
+from my_lang.parser import Parser, BinOp, Num, UnaryOp, Var, Assign, Block, If, While, Print, NoOp, String
 from my_lang.lexer import Lexer
 
 GLOBAL_SCOPE = {}
@@ -17,22 +17,28 @@ class Interpreter(NodeVisitor):
         self.parser = parser
 
     def visit_BinOp(self, node):
+        left_val = self.visit(node.left)
+        right_val = self.visit(node.right)
+
         if node.op.type == 'PLUS':
-            return self.visit(node.left) + self.visit(node.right)
+            return left_val + right_val
         elif node.op.type == 'MINUS':
-            return self.visit(node.left) - self.visit(node.right)
+            return left_val - right_val
         elif node.op.type == 'MUL':
-            return self.visit(node.left) * self.visit(node.right)
+            return left_val * right_val
         elif node.op.type == 'DIV':
-            return self.visit(node.left) / self.visit(node.right)
-        elif node.op.type == 'EQ':
-            return self.visit(node.left) == self.visit(node.right)
-        elif node.op.type == 'LT':
-            return self.visit(node.left) < self.visit(node.right)
-        elif node.op.type == 'GT':
-            return self.visit(node.left) > self.visit(node.right)
+            return left_val / right_val
+        elif node.op.type == 'ASSIGN_OR_EQ': # 'is' для сравнения
+            return left_val == right_val
+        elif node.op.type == 'KEYWORD_LESS': # 'less than'
+            return left_val < right_val
+        elif node.op.type == 'KEYWORD_GREATER': # 'greater than'
+            return left_val > right_val
 
     def visit_Num(self, node):
+        return node.value
+
+    def visit_String(self, node):
         return node.value
 
     def visit_UnaryOp(self, node):
@@ -79,17 +85,18 @@ class Interpreter(NodeVisitor):
 
 if __name__ == '__main__':
     text = """
-    x = 10;
-    y = 5;
-    if (x > y) {
-        print x;
-    } else {
-        print y;
-    }
-    while (x > 0) {
-        x = x - 1;
-        print x;
-    }
+    x is 10 + 5
+    if x greater than 10 then
+        show x
+    else
+        show "x is not greater than 10"
+    end
+    loop while x greater than 0 do
+        x is x - 1
+        show x
+    end
+    y is "Hello, World!"
+    show y
     """
     lexer = Lexer(text)
     parser = Parser(lexer)

@@ -28,7 +28,7 @@ class Lexer:
     def skip_comment(self):
         while self.current_char is not None and self.current_char != '\n':
             self.advance()
-        self.advance() # Пропустить символ новой строки
+        self.advance() 
 
     def integer(self):
         result = ''
@@ -37,6 +37,15 @@ class Lexer:
             self.advance()
         return int(result)
 
+    def string(self):
+        self.advance() 
+        result = ''
+        while self.current_char is not None and self.current_char != '"':
+            result += self.current_char
+            self.advance()
+        self.advance() 
+        return Token('STRING', result)
+
     def identifier(self):
         result = ''
         while self.current_char is not None and (self.current_char.isalnum() or self.current_char == '_'):
@@ -44,10 +53,18 @@ class Lexer:
             self.advance()
         
         keywords = {
-            'if': Token('KEYWORD', 'if'),
-            'else': Token('KEYWORD', 'else'),
-            'while': Token('KEYWORD', 'while'),
-            'print': Token('KEYWORD', 'print'),
+            'if': Token('KEYWORD_IF', 'if'),
+            'then': Token('KEYWORD_THEN', 'then'),
+            'else': Token('KEYWORD_ELSE', 'else'),
+            'end': Token('KEYWORD_END', 'end'),
+            'loop': Token('KEYWORD_LOOP', 'loop'),
+            'while': Token('KEYWORD_WHILE', 'while'),
+            'do': Token('KEYWORD_DO', 'do'),
+            'show': Token('KEYWORD_SHOW', 'show'),
+            'is': Token('ASSIGN_OR_EQ', 'is'), # 'is' может быть присваиванием или сравнением
+            'less': Token('KEYWORD_LESS', 'less'),
+            'than': Token('KEYWORD_THAN', 'than'),
+            'greater': Token('KEYWORD_GREATER', 'greater'),
         }
         
         token = keywords.get(result, Token('ID', result))
@@ -62,6 +79,9 @@ class Lexer:
             if self.current_char == '#':
                 self.skip_comment()
                 continue
+
+            if self.current_char == '"':
+                return self.string()
 
             if self.current_char.isdigit():
                 return Token('INTEGER', self.integer())
@@ -81,12 +101,6 @@ class Lexer:
             if self.current_char == '/':
                 self.advance()
                 return Token('DIV', '/')
-            if self.current_char == '=':
-                self.advance()
-                if self.current_char == '=':
-                    self.advance()
-                    return Token('EQ', '==')
-                return Token('ASSIGN', '=')
             if self.current_char == '<':
                 self.advance()
                 return Token('LT', '<')
@@ -99,15 +113,6 @@ class Lexer:
             if self.current_char == ')':
                 self.advance()
                 return Token('RPAREN', ')')
-            if self.current_char == '{':
-                self.advance()
-                return Token('LBRACE', '{')
-            if self.current_char == '}':
-                self.advance()
-                return Token('RBRACE', '}')
-            if self.current_char == ';':
-                self.advance()
-                return Token('SEMI', ';')
 
             raise Exception(f"Неизвестный символ: {self.current_char}")
 
@@ -115,12 +120,19 @@ class Lexer:
 
 if __name__ == '__main__':
     text = """
-    x = 10 + 5;
-    if x > 10 {
-        print x;
-    } else {
-        print 0;
-    }
+    x is 10 + 5
+    # Это комментарий
+    if x greater than 10 then
+        show x
+    else
+        show "x is not greater than 10"
+    end
+    loop while x greater than 0 do
+        x is x - 1
+        show x
+    end
+    y is "Hello, World!"
+    show y
     """
     lexer = Lexer(text)
     token = lexer.get_next_token()
