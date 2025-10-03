@@ -20,7 +20,7 @@ My Simple Lang - это очень простой язык программир�
     Используйте `main.py` для запуска файлов с кодом на My Simple Lang.
 
     ```bash
-    python my_lang/main.py my_lang/example.mylang
+    python -m my_lang.main my_lang/example.mylang
     ```
 
     Это выполнит код из файла `example.mylang` и выведет результат на консоль.
