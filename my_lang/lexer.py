@@ -61,10 +61,13 @@ class Lexer:
             'while': Token('KEYWORD_WHILE', 'while'),
             'do': Token('KEYWORD_DO', 'do'),
             'show': Token('KEYWORD_SHOW', 'show'),
-            'is': Token('ASSIGN_OR_EQ', 'is'), # 'is' может быть присваиванием или сравнением
+            'is': Token('KEYWORD_IS', 'is'),
+            'not': Token('KEYWORD_NOT', 'not'),
             'less': Token('KEYWORD_LESS', 'less'),
             'than': Token('KEYWORD_THAN', 'than'),
             'greater': Token('KEYWORD_GREATER', 'greater'),
+            'true': Token('BOOLEAN', True),
+            'false': Token('BOOLEAN', False),
         }
         
         token = keywords.get(result, Token('ID', result))
@@ -87,7 +90,20 @@ class Lexer:
                 return Token('INTEGER', self.integer())
 
             if self.current_char.isalpha() or self.current_char == '_':
-                return self.identifier()
+                identifier_token = self.identifier()
+                # Проверяем комбинацию 'not is'
+                if identifier_token.type == 'KEYWORD_NOT':
+                    # Сохраняем текущую позицию, чтобы откатиться, если 'is' не следует
+                    current_pos = self.pos
+                    current_char = self.current_char
+                    self.skip_whitespace()
+                    next_token = self.identifier() # Повторно вызываем identifier для следующего слова
+                    if next_token.type == 'KEYWORD_IS':
+                        return Token('NOT_EQ', 'not is')
+                    else: # Откатываемся, если это не 'not is'
+                        self.pos = current_pos
+                        self.current_char = current_char
+                return identifier_token
 
             if self.current_char == '+':
                 self.advance()

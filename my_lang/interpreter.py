@@ -1,4 +1,4 @@
-from my_lang.parser import Parser, BinOp, Num, UnaryOp, Var, Assign, Block, If, While, Print, NoOp, String
+from my_lang.parser import Parser, BinOp, Num, UnaryOp, Var, Assign, Block, If, While, Print, NoOp, String, Boolean
 from my_lang.lexer import Lexer
 
 GLOBAL_SCOPE = {}
@@ -28,8 +28,10 @@ class Interpreter(NodeVisitor):
             return left_val * right_val
         elif node.op.type == 'DIV':
             return left_val / right_val
-        elif node.op.type == 'ASSIGN_OR_EQ': # 'is' для сравнения
+        elif node.op.type == 'KEYWORD_IS': # 'is' для сравнения
             return left_val == right_val
+        elif node.op.type == 'NOT_EQ': # 'not is'
+            return left_val != right_val
         elif node.op.type == 'KEYWORD_LESS': # 'less than'
             return left_val < right_val
         elif node.op.type == 'KEYWORD_GREATER': # 'greater than'
@@ -39,6 +41,9 @@ class Interpreter(NodeVisitor):
         return node.value
 
     def visit_String(self, node):
+        return node.value
+
+    def visit_Boolean(self, node):
         return node.value
 
     def visit_UnaryOp(self, node):
@@ -97,6 +102,14 @@ if __name__ == '__main__':
     end
     y is "Hello, World!"
     show y
+    flag is true
+    if flag is true then
+        show "Flag is true"
+    end
+    z is 10
+    if z not is 5 then
+        show "z is not 5"
+    end
     """
     lexer = Lexer(text)
     parser = Parser(lexer)

@@ -22,3 +22,25 @@ show a
 # Строки
 message is "Привет, мир!"
 show message
+
+# Булевы значения и оператор "not is"
+flag is true
+show flag
+
+if flag is true then
+    show "Flag is true!"
+end
+
+z is 10
+if z not is 5 then
+    show "z is not 5!"
+end
+
+if z is 10 then
+    show "z is 10!"
+end
+
+another_flag is false
+if another_flag is false then
+    show "Another flag is false!"
+end

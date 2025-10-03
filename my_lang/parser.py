@@ -13,6 +13,11 @@ class String(AST):
         self.token = token
         self.value = token.value
 
+class Boolean(AST):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
 class BinOp(AST):
     def __init__(self, left, op, right):
         self.left = left
@@ -93,7 +98,7 @@ class Parser:
     def assignment_statement(self):
         left = self.variable()
         token = self.current_token
-        self.eat('ASSIGN_OR_EQ') # 'is'
+        self.eat('KEYWORD_IS') # 'is' для присваивания
         right = self.expr()
         node = Assign(left, token, right)
         return node
@@ -142,14 +147,16 @@ class Parser:
     def expr(self):
         node = self.term()
 
-        while self.current_token.type in ('PLUS', 'MINUS', 'ASSIGN_OR_EQ', 'KEYWORD_LESS', 'KEYWORD_GREATER'):
+        while self.current_token.type in ('PLUS', 'MINUS', 'KEYWORD_IS', 'KEYWORD_LESS', 'KEYWORD_GREATER', 'NOT_EQ'):
             token = self.current_token
             if token.type == 'PLUS':
                 self.eat('PLUS')
             elif token.type == 'MINUS':
                 self.eat('MINUS')
-            elif token.type == 'ASSIGN_OR_EQ': # 'is' для сравнения
-                self.eat('ASSIGN_OR_EQ')
+            elif token.type == 'KEYWORD_IS': # 'is' для сравнения
+                self.eat('KEYWORD_IS')
+            elif token.type == 'NOT_EQ': # 'not is'
+                self.eat('NOT_EQ')
             elif token.type == 'KEYWORD_LESS': # 'less than'
                 self.eat('KEYWORD_LESS')
                 self.eat('KEYWORD_THAN')
@@ -187,6 +194,9 @@ class Parser:
         elif token.type == 'STRING':
             self.eat('STRING')
             return String(token)
+        elif token.type == 'BOOLEAN':
+            self.eat('BOOLEAN')
+            return Boolean(token)
         elif token.type == 'LPAREN':
             self.eat('LPAREN')
             node = self.expr()
@@ -221,6 +231,14 @@ if __name__ == '__main__':
     end
     y is "Hello, World!"
     show y
+    flag is true
+    if flag is true then
+        show "Flag is true"
+    end
+    z is 10
+    if z not is 5 then
+        show "z is not 5"
+    end
     """
     lexer = Lexer(text)
     parser = Parser(lexer)
