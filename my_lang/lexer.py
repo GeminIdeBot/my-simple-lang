@@ -25,6 +25,11 @@ class Lexer:
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
+    def skip_comment(self):
+        while self.current_char is not None and self.current_char != '\n':
+            self.advance()
+        self.advance() # Пропустить символ новой строки
+
     def integer(self):
         result = ''
         while self.current_char is not None and self.current_char.isdigit():
@@ -52,6 +57,10 @@ class Lexer:
         while self.current_char is not None:
             if self.current_char.isspace():
                 self.skip_whitespace()
+                continue
+            
+            if self.current_char == '#':
+                self.skip_comment()
                 continue
 
             if self.current_char.isdigit():
